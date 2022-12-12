@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numbers & Cards</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"
+            integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer">
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"
+            integrity="sha512-zJYu9ICC+mWF3+dJ4QC34N9RA0OVS1XtPbnf6oXlvGrLGNB8egsEzu/5wgG90I61hOOKvcywoLzwNmPqGAdATA=="
+            crossorigin="anonymous" 
+            referrerpolicy="no-referrer">
+    </script>
+</head>
+
+<body>
+    <h2>Number Facts</h2>
+    <h3>A fact about the number 13:</h3>
+    <p id="singleFact"></p>
+    <hr/>
+    <h3>Multiple number facts:</h3>
+    <p id="multipleRandFacts"></p>
+    <hr/>
+    <h3>Multiple facts about 13:</h3>
+    <p id="multipleFacts"></p>
+    <br/>
+    <h2>Deck of Cards</h2>
+    <button id="drawCard">Draw Card</button>
+    <div id="card">
+        
+    </div>
+
+
+    <script type="text/javascript">
+
+        /************************** Number Facts **************************/
+        const rand1 = Math.floor(Math.random() * 100);
+        const rand2 = Math.floor(Math.random() * 100);
+        const rand3 = Math.floor(Math.random() * 100);
+        const urlOne = "http://numbersapi.com/13";
+        const urlTwo = `http://numbersapi.com/${rand1},${rand2},${rand3}`
+
+        const promiseOne = axios.get(urlOne);
+        const promiseTwo = axios.get(urlTwo);
+
+        promiseOne
+            .then(data => $("#singleFact").text(data.data))
+            .catch(err => $("#singleFact").text(`There was an error: ${err}`));
+
+        promiseTwo
+            .then((data) => {
+                for(let fact in data.data) {
+                    $('#multipleRandFacts').append(data.data[fact]).append('<br/>');
+                }
+            })
+            .catch(err => console.log(err));
+
+        axios
+            .get(urlOne)
+            .then(data => {
+                $("#multipleFacts").append(data.data).append('<br/>');
+                return axios.get(urlOne);
+            })
+            .then(data => {
+                $("#multipleFacts").append(data.data).append('<br/>');
+                return axios.get(urlOne);
+            })
+            .then(data => {
+                $("#multipleFacts").append(data.data).append('<br/>');
+                return axios.get(urlOne);
+            })
+            .then(data => {
+                $("#multipleFacts").append(data.data);
+                return axios.get(urlOne);
+            })
+            .catch(err => $("#multipleFacts").text(`There was an error: ${err}`));
+
+
+        /************************** Deck of Cards **************************/
+        const newDeckURL = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
+        const newDeckRes = axios.get(newDeckURL);
+        const newDeckTwoCards = axios.get(newDeckURL);
+        const drawCardRes = axios.get(newDeckURL);
+        
+        newDeckRes
+            .then(data => {
+                axios.get(`https://deckofcardsapi.com/api/deck/${data.data['deck_id']}/draw/?count=1`)
+                    .then(data => console.log(data.data.cards[0].value + ' of ' + data.data.cards[0].suit))
+                    .catch(err => console.log(err));
+            })
+            .catch(err => console.log(err));
+
+        newDeckTwoCards
+            .then(data => {
+                return axios.get(`https://deckofcardsapi.com/api/deck/${data.data['deck_id']}/draw/?count=1`);
+            })
+            .then(data => {
+                console.log(data.data.cards[0].value + ' of ' + data.data.cards[0].suit)
+                return axios.get(`https://deckofcardsapi.com/api/deck/${data.data['deck_id']}/draw/?count=1`);
+            })
+            .then(data => console.log(data.data.cards[0].value + ' of ' + data.data.cards[0].suit))
+            .catch(err => console.log(err));
+
+        $('#drawCard').on('click', () => {
+            drawCardRes
+            .then(data => {
+                return axios.get(`https://deckofcardsapi.com/api/deck/${data.data['deck_id']}/draw/?count=1`);
+            })
+            .then(data => {
+                $('#card').empty();
+                $('#card').append(`<img width="150" src="${data.data.cards[0].images.png}" />`)
+            })
+            .catch(err => console.log(err));
+        })
+    </script>
+</body>
+</html>
