@@ -45,78 +45,57 @@
         const urlOne = "http://numbersapi.com/13";
         const urlTwo = `http://numbersapi.com/${rand1},${rand2},${rand3}`
 
-        const promiseOne = axios.get(urlOne);
-        const promiseTwo = axios.get(urlTwo);
+        async function getNumFact() {
+            const fact = await axios.get(urlOne);
+            $("#singleFact").text(fact.data);
+        }
 
-        promiseOne
-            .then(data => $("#singleFact").text(data.data))
-            .catch(err => $("#singleFact").text(`There was an error: ${err}`));
+        async function getRandFacts() {
+            const facts = await axios.get(urlTwo);
+            for(let data in facts.data) {
+                $("#multipleRandFacts").append(facts.data[data]).append('<br/>');
+            }
+        }
 
-        promiseTwo
-            .then((data) => {
-                for(let fact in data.data) {
-                    $('#multipleRandFacts').append(data.data[fact]).append('<br/>');
-                }
-            })
-            .catch(err => console.log(err));
+        async function get4Facts() {
+            const facts = await Promise.all([
+                axios.get(urlOne),
+                axios.get(urlOne),
+                axios.get(urlOne),
+                axios.get(urlOne)
+            ]);
 
-        axios
-            .get(urlOne)
-            .then(data => {
-                $("#multipleFacts").append(data.data).append('<br/>');
-                return axios.get(urlOne);
-            })
-            .then(data => {
-                $("#multipleFacts").append(data.data).append('<br/>');
-                return axios.get(urlOne);
-            })
-            .then(data => {
-                $("#multipleFacts").append(data.data).append('<br/>');
-                return axios.get(urlOne);
-            })
-            .then(data => {
-                $("#multipleFacts").append(data.data);
-                return axios.get(urlOne);
-            })
-            .catch(err => $("#multipleFacts").text(`There was an error: ${err}`));
+            for(let fact in facts) {
+                $("#multipleFacts").append(facts[fact].data).append('<br/>');
+            }
+        }
+
+        getNumFact();
+        getRandFacts();
+        get4Facts();
 
 
         /************************** Deck of Cards **************************/
         const newDeckURL = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
-        const newDeckRes = axios.get(newDeckURL);
-        const newDeckTwoCards = axios.get(newDeckURL);
-        const drawCardRes = axios.get(newDeckURL);
         
-        newDeckRes
-            .then(data => {
-                axios.get(`https://deckofcardsapi.com/api/deck/${data.data['deck_id']}/draw/?count=1`)
-                    .then(data => console.log(data.data.cards[0].value + ' of ' + data.data.cards[0].suit))
-                    .catch(err => console.log(err));
-            })
-            .catch(err => console.log(err));
-
-        newDeckTwoCards
-            .then(data => {
-                return axios.get(`https://deckofcardsapi.com/api/deck/${data.data['deck_id']}/draw/?count=1`);
-            })
-            .then(data => {
-                console.log(data.data.cards[0].value + ' of ' + data.data.cards[0].suit)
-                return axios.get(`https://deckofcardsapi.com/api/deck/${data.data['deck_id']}/draw/?count=1`);
-            })
-            .then(data => console.log(data.data.cards[0].value + ' of ' + data.data.cards[0].suit))
-            .catch(err => console.log(err));
-
-        $('#drawCard').on('click', () => {
-            drawCardRes
-            .then(data => {
-                return axios.get(`https://deckofcardsapi.com/api/deck/${data.data['deck_id']}/draw/?count=1`);
-            })
-            .then(data => {
+        const deck = {
+            async init() {
+                const res = await axios.get(newDeckURL);
+                this.deckID = res.data.deck_id;
+            },
+            async drawCard() {
+                const res = await axios.get(`https://deckofcardsapi.com/api/deck/${this.deckID}/draw/?count=1`);
                 $('#card').empty();
-                $('#card').append(`<img width="150" src="${data.data.cards[0].images.png}" />`)
-            })
-            .catch(err => console.log(err));
-        })
+                $('#card').append(`<img width="150" src="${res.data.cards[0].images.png}" />`)
+            }
+        }
+
+        deck.init();
+        
+        $('#drawCard').on('click', async function() {
+            deck.drawCard();
+        });
+
     </script>
 </body>
 </html>
